@@ -5,10 +5,6 @@ resource "google_storage_bucket" "my-bucket" {
   force_destroy            = true
   public_access_prevention = "enforced"
 }
-resource "google_service_account" "default" {
-  account_id   = "my-custom-sa"
-  display_name = "Custom SA for VM Instance"
-}
 
 resource "google_compute_instance" "default" {
   name         = "sona"
