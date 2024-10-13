@@ -25,7 +25,7 @@ pipeline {
             steps {
                 script {
                         dir('/var/lib/jenkins/workspace/terraformm') {  // Update this path accordingly
-                	sh 'terraform import google_storage_bucket.my-bucket25 import-test-bucket-terarform'
+                	sh 'terraform import google_storage_bucket.my_bucket25 import-test-bucket-terarform'
            		 }
                     }
                 }
