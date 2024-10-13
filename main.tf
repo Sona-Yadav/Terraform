@@ -1,5 +1,5 @@
 resource "google_storage_bucket" "my-bucket" {
-  name                     = "sona-demogcp12"
+  name                     = "sona-demogcp125"
   project                  = "test-terraform-438504"
   location                 = "US"
   force_destroy            = true
