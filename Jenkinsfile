@@ -24,7 +24,7 @@ pipeline {
         stage('Import Existing GCS Bucket') {
             steps {
                 script {
-                        sh 'terraform import google_storage_bucket.my_bucket my-existing-bucket'
+                        sh 'terraform import google_storage_bucket.my_bucket25 import-test-bucket-terarform'
                     }
                 }
             }
