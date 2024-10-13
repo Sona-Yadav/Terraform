@@ -6,44 +6,58 @@ resource "google_storage_bucket" "my-bucket" {
   public_access_prevention = "enforced"
 }
 
-resource "google_compute_instance" "default" {
-  name         = "sona"
-  machine_type = "n2-standard-2"
-  zone         = "us-central1-a"
+# Configure the Google Cloud provider
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
 
-  tags = ["foo", "bar"]
+# Create a network
+resource "google_compute_network" "vpc_network" {
+  name = "terraform-network"
+}
+
+# Create a firewall rule to allow traffic
+resource "google_compute_firewall" "default" {
+  name    = "allow-http-ssh"
+  network = google_compute_network.vpc_network.self_link
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22", "80"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+}
+
+# Create an instance (VM)
+resource "google_compute_instance" "vm_instance" {
+  name         = "terraform-instance"
+  machine_type = "e2-medium"
+  zone         = var.zone
 
   boot_disk {
     initialize_params {
       image = "debian-cloud/debian-11"
-      labels = {
-        my_label = "value"
-      }
     }
-  }
-
-  // Local SSD disk
-  scratch_disk {
-    interface = "NVME"
   }
 
   network_interface {
-    network = "default"
+    network = google_compute_network.vpc_network.name
 
     access_config {
-      // Ephemeral public IP
+      # Ephemeral public IP
     }
   }
 
-  metadata = {
-    foo = "bar"
-  }
+  tags = ["http-server", "ssh-server"]
 
-  metadata_startup_script = "echo hi > /test.txt"
-
-  service_account {
-    # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
-    email  = google_service_account.default.email
-    scopes = ["cloud-platform"]
-  }
+  metadata_startup_script = <<-EOT
+    #!/bin/bash
+    sudo apt-get update
+    sudo apt-get install -y apache2
+    sudo systemctl start apache2
+    sudo systemctl enable apache2
+  EOT
 }
+
