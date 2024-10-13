@@ -4,7 +4,7 @@ resource "google_storage_bucket" "my-bucket" {
   location                 = "US"
   force_destroy            = true
   public_access_prevention = "enforced"
-  depends_on = google_storage_bucket.my-demobucket
+  depends_on = [google_storage_bucket.my-demobucket]
 }
 
 resource "google_storage_bucket" "my-demobucket" {
