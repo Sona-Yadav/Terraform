@@ -6,58 +6,50 @@ resource "google_storage_bucket" "my-bucket" {
   public_access_prevention = "enforced"
 }
 
-# Configure the Google Cloud provider
-provider "google" {
-  project = var.project_id
-  region  = var.region
+resource "google_service_account" "default" {
+  account_id   = "my-custom-sa"
+  display_name = "Custom SA for VM Instance"
 }
 
-# Create a network
-resource "google_compute_network" "vpc_network" {
-  name = "terraform-network"
-}
+resource "google_compute_instance" "default" {
+  name         = "my-instance"
+  machine_type = "n2-standard-2"
+  zone         = "us-central1-a"
 
-# Create a firewall rule to allow traffic
-resource "google_compute_firewall" "default" {
-  name    = "allow-http-ssh"
-  network = google_compute_network.vpc_network.self_link
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22", "80"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-}
-
-# Create an instance (VM)
-resource "google_compute_instance" "vm_instance" {
-  name         = "terraform-instance"
-  machine_type = "e2-medium"
-  zone         = var.zone
+  tags = ["foo", "bar"]
 
   boot_disk {
     initialize_params {
       image = "debian-cloud/debian-11"
+      labels = {
+        my_label = "value"
+      }
     }
+  }
+
+  // Local SSD disk
+  scratch_disk {
+    interface = "NVME"
   }
 
   network_interface {
-    network = google_compute_network.vpc_network.name
+    network = "default"
 
     access_config {
-      # Ephemeral public IP
+      // Ephemeral public IP
     }
   }
 
-  tags = ["http-server", "ssh-server"]
+  metadata = {
+    foo = "bar"
+  }
 
-  metadata_startup_script = <<-EOT
-    #!/bin/bash
-    sudo apt-get update
-    sudo apt-get install -y apache2
-    sudo systemctl start apache2
-    sudo systemctl enable apache2
-  EOT
+  metadata_startup_script = "echo hi > /test.txt"
+
+  service_account {
+    # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
+    email  = google_service_account.default.email
+    scopes = ["cloud-platform"]
+  }
 }
 
